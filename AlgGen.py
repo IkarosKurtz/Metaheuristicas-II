@@ -3,9 +3,9 @@
 Qué tenemos que solucionar?? Hacemos lo del Obed en binario??
 cual de obed?
 
-Qué tenemos que encontrar un cromosoma que en binario dija "Obed Pardo", el cromosoma
+Qué tenemos que encontrar un cromosoma que en binario dija "Obed Says Go Fuck Jusepe Fairon", el cromosoma
 final deberia de ser:
-"01001111 01100010 01100101 01100100 00100000 01010000 01100001 01110010 01100100 01101111 "
+"01001111011000100110010101100100001000000101001101100001011110010111001100100000010001110110111100100000011001100111010101100011011010110010000001001010011101010111001101100101011100000110010100100000010001100110000101101001011100100110111101101110"
 
 acabo de bajar 2 kilos leo
 
@@ -79,10 +79,11 @@ import numpy as np
 from numpy.typing import NDArray
 
 POPULATION_SIZE = 1500
-TEMPLATE = "01001111011000100110010101100100001000000101000001100001011100100110010001101111"
+TEMPLATE = "01001111 01100010 01100101 01100100 00100000 01010011 01100001 01111001 01110011 00100000 01000111 01101111 00100000 01100110 01110101 01100011 01101011 00100000 01001010 01110101 01110011 01100101 01110000 01100101 00100000 01000110 01100001 01101001 01110010 01101111 01101110 ".replace(
+  " ", "")
 CROMOSOME_SIZE = len(TEMPLATE)
-MAX_GENERATIONS = 500
-MUTATION_PROB = .015
+MAX_GENERATIONS = 1000
+MUTATION_PROB = 0.4
 STOPPING_CRITERIA = 50
 
 
@@ -99,7 +100,7 @@ def generate_population():
 
 
 def fitness(individual: NDArray[Any], template: str) -> int:
-  return sum(1 for x, y in zip(individual, template) if str(x) == str(y))
+  return np.sum(individual == np.array(list(map(int, template))))
 
 
 def roulette_selection(population: NDArray[Any]):
@@ -110,20 +111,24 @@ def roulette_selection(population: NDArray[Any]):
   slots = np.cumsum(probabilities)
 
   random_numbers = np.random.rand(len(population))
-  selected_individuals = []
-
-  for random_number in random_numbers:
-    idx = np.searchsorted(slots, random_number)
-    selected_individuals.append(population[idx])
+  selected_individuals = population[np.searchsorted(slots, random_numbers)]
 
   return np.array(selected_individuals)
 
 
-def crossover(father1: NDArray[Any], father2: NDArray[Any]):
-  cross_point = np.random.randint(0, CROMOSOME_SIZE + 1)
-  son1 = [*father1[:cross_point], *father2[cross_point:]]
-  son2 = [*father2[:cross_point], *father1[cross_point:]]
+def crossover(father1: NDArray[Any], father2: NDArray[Any]) -> tuple[NDArray[Any], NDArray[Any]]:
+  cross_point = np.random.randint(1, CROMOSOME_SIZE)
+
+  son1 = np.concatenate((father1[:cross_point], father2[cross_point:]))
+  son2 = np.concatenate((father2[:cross_point], father1[cross_point:]))
+
   return son1, son2
+
+
+def mutation(individual: NDArray[Any]):
+  for i in range(len(individual)):
+    if np.random.rand() < MUTATION_PROB:
+      individual[i] = 1 - individual[i]
 
 
 def mutation(individuo: NDArray[Any]):
@@ -183,6 +188,8 @@ def main():
   best = 0
   best_individual = None
   iters_with_same_best = 0
+  print("CROMOSOME_SIZE: ", CROMOSOME_SIZE)
+  print("MUTATION_PROB: ", MUTATION_PROB)
 
   # CICLO??
   for _ in range(MAX_GENERATIONS):
@@ -214,7 +221,7 @@ def main():
       new_population.append(son1)
       new_population.append(son2)
 
-    population = new_population
+    population = np.array(new_population)
 
   print(f"\n\nBest: {best} - {np.array(best_individual)}")
 
