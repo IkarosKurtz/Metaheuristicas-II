@@ -83,8 +83,8 @@ def replace(son1: NDArray[Any], son2: NDArray[Any], father1: NDArray[Any], fathe
   return array_sorted[0], array_sorted[1]
 
 
-def better_print(solution: NDArray[Any], *, values: int = 4):
-  return np.concatenate((solution[:values], ["..."], solution[-values:]))
+def better_print(solution: NDArray[Any], *, values: int = 4) -> list[Any]:
+  return np.concatenate((solution[:values], ["..."], solution[-values:])).tolist()
 
 
 def main():
@@ -108,7 +108,7 @@ def main():
       highest_fitness = new_highest_fitness
       optimal_solution = new_optimal_solution
 
-      console.print(f"[red][🔴] New highest fitness: {new_highest_fitness}", end="\n")
+      console.print(f"\n[red][🔴] New highest fitness: {new_highest_fitness}", end="\n")
       pprint(better_print(new_optimal_solution, values=5))
 
       repeted_best = 0
