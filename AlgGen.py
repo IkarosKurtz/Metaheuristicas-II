@@ -1,93 +1,33 @@
-
 """
-Qué tenemos que solucionar?? Hacemos lo del Obed en binario??
-cual de obed?
-
-Qué tenemos que encontrar un cromosoma que en binario dija "Obed Says Go Fuck Jusepe Fairon", el cromosoma
-final deberia de ser:
-"01001111011000100110010101100100001000000101001101100001011110010111001100100000010001110110111100100000011001100111010101100011011010110010000001001010011101010111001101100101011100000110010100100000010001100110000101101001011100100110111101101110"
-
-acabo de bajar 2 kilos leo
-
-Ya vez que queria cromosomas largos el Ornelas
-
-Va, yo pensaba que era uno equis de que llegara a puros 1's
-Pero si asi dijo el profe, asi lo hacemos
-
-como quieres planearlo?
-
-No se, que cosas tenemos que hacer??
-
-- Mutación
-- Ruleta
-- Crossover
-
-
-
-
-jaja
-
-o sea, yo con lo que me quedé, o pensaba, era un algoritmo genético normal, de puros 1, lo que debíamos centrarnos era la selección
-que fuera ruleta, lo que no sé, es cómo aplicar la ruleta en general, o sea no sé cómo funciona
-
-Según yo es con lo del slot, dejame hago un ejemplo:
-
-String  fitness   Probability  Slot
-1       0.64      0.31         
-2       0.32      0.15
-3       0.68      0.33
-4       0.4       0.19
-Total   2.04     0.98 (deberia ser 1)
-
-Ahora sí, basicamente es eso.
-La ídea es que sacamos el fitness de todos los individuos y luego los sumamos
-después calculamos la probabilidad de cada uno *fitness/total_fitness*,
-deberia de dar *1*, pero por que quite decimales me dio `0.98`.
-Lo importante es el slot, que es el que define si ese individuo se selecciona (no se para que se selecciona
-eso nunca entiendo, no se si es para el crossover o que).
-
-El slot se calcula con la probabilidad, *prob+prob_acumulada*, en el primero seria `0.32 + 0` entonces
-la tabla seria:
-
-String  fitness   Probability  Slot
-1       0.64      0.31         0.31
-2       0.32      0.15
-3       0.68      0.33
-4       0.4       0.19
-Total   2.04     0.98 (deberia ser 1)
-
-Y así vas con los demás. El siguiente es `0.15+0.31`
-
-String  fitness   Probability  Slot
-1       0.64      0.31         0.31
-2       0.32      0.15         0.46
-3       0.68      0.33         0.79
-4       0.4       0.19         0.98 (deberia ser 1)
-Total   2.04     0.98 (deberia ser 1)
-
-Esa era la parte complicada. Sí se entendió??
-
-https://cratecode.com/info/roulette-wheel-selection
-
-encontre esa explicacion, pero no entendi bien
-
-
+  Algoritmo genético para resolver el problema de onemax, que consiste en
+  encontrar un sujeto con puros 1's.
+  
+  Maestro: Francisco Javier Ornelas Zapata
+  Materia: Metaheurísticas II
+  Equipo: 
+    Carlos Leonardo Cruz Ortiz
+    Iván Israel Hurtado Lozano
+    José Luis Elizondo Figueroa  
+  
+  Dependencias:
+    - numpy
 """
+
 from typing import Any
+from rich.console import Console
+from rich.pretty import pprint
 
 import numpy as np
 from numpy.typing import NDArray
 
 POPULATION_SIZE = 1500
-TEMPLATE = "01001111 01100010 01100101 01100100 00100000 01010011 01100001 01111001 01110011 00100000 01000111 01101111 00100000 01100110 01110101 01100011 01101011 00100000 01001010 01110101 01110011 01100101 01110000 01100101 00100000 01000110 01100001 01101001 01110010 01101111 01101110 ".replace(
-  " ", "")
-CROMOSOME_SIZE = len(TEMPLATE)
-MAX_GENERATIONS = 1000
-MUTATION_PROB = 0.4
-STOPPING_CRITERIA = 50
+CROMOSOME_SIZE = 500
+MAX_GENERATIONS = 2000
+STOP_CRITERIA = 200
+MUTATION_PROB = 1 / CROMOSOME_SIZE
 
 
-def generate_population():
+def generate_population() -> NDArray[Any]:
   population = [
     [
       np.random.randint(0, 2)  # 2 es exclusivo
@@ -99,21 +39,21 @@ def generate_population():
   return np.stack(population)
 
 
-def fitness(individual: NDArray[Any], template: str) -> int:
-  return np.sum(individual == np.array(list(map(int, template))))
+def fitness(candidate_solution: NDArray[Any]) -> int:
+  return np.sum(candidate_solution)
 
 
 def roulette_selection(population: NDArray[Any]):
-  fitnesses = np.array([fitness(i, TEMPLATE) for i in population])
+  fitnesses = np.array([fitness(i) for i in population])
   total_fitness = sum(fitnesses)
 
   probabilities = fitnesses / total_fitness
   slots = np.cumsum(probabilities)
 
   random_numbers = np.random.rand(len(population))
-  selected_individuals = population[np.searchsorted(slots, random_numbers)]
+  roulette_winners = population[np.searchsorted(slots, random_numbers)]
 
-  return np.array(selected_individuals)
+  return np.array(roulette_winners)[:10]
 
 
 def crossover(father1: NDArray[Any], father2: NDArray[Any]) -> tuple[NDArray[Any], NDArray[Any]]:
@@ -125,16 +65,10 @@ def crossover(father1: NDArray[Any], father2: NDArray[Any]) -> tuple[NDArray[Any
   return son1, son2
 
 
-def mutation(individual: NDArray[Any]):
-  for i in range(len(individual)):
+def mutation(candidate_solution: NDArray[Any]):
+  for i in range(len(candidate_solution)):
     if np.random.rand() < MUTATION_PROB:
-      individual[i] = 1 - individual[i]
-
-
-def mutation(individuo: NDArray[Any]):
-  for i in individuo:
-    if np.random.rand() < MUTATION_PROB:
-      individuo[i] = 1 - individuo[i]
+      candidate_solution[i] = 1 - candidate_solution[i]
 
 
 # en teoria retorna los dos individuos con mayor fitness entre los dos hijos y padres
@@ -149,87 +83,70 @@ def replace(son1: NDArray[Any], son2: NDArray[Any], father1: NDArray[Any], fathe
   return array_sorted[0], array_sorted[1]
 
 
+def better_print(solution: NDArray[Any], *, values: int = 4):
+  return np.concatenate((solution[:values], ["..."], solution[-values:]))
+
+
 def main():
-  """
-  Pasos:
-  - Generar la población ✅
-  - Calcular la fitness de cada individuo ✅
-  - Seleccion por ruleta ✅
-  - Cruzamiento
-  - Mutacion
-  - Repeat
-  """
-
-  """
-  Tu eres el master, qué se hace en el cruzamiento, o como se hace el ciclo de las generaciones
-  lo del cruzamiento pues es lo de combinar a los 2 padres, tons yo digo que hagamos el cruzamiento simple, no del OX o esos
-  solo lo partimos a la mitad
-
-  tipo
-  p1 - 0101010101
-  p2 - 0000110111
-
-  partido a la mitad por decir algo
-
-  h1 - 0101010111
-  h2 - 0000110101
-
-  bueno algo asi, namas combinamos y ya
-
-  y pues lo de las generaciones es el loop para conseguir mejor respuesta
-  
-  Aguantame unos minutos
-
-  va, mientras trato de ver qpd. 
-  Ya ando
-  """
-
   population = generate_population()
-  best = 0
-  best_individual = None
-  iters_with_same_best = 0
-  print("CROMOSOME_SIZE: ", CROMOSOME_SIZE)
-  print("MUTATION_PROB: ", MUTATION_PROB)
+  console = Console()
+  highest_fitness = 0
+  optimal_solution = None
+  repeted_best = 0
+  console.print(f"[green][!] CROMOSOME_SIZE: {CROMOSOME_SIZE}")
+  console.print(f"[green][!] MUTATION_PROB: {MUTATION_PROB * 100}%")
 
-  # CICLO??
-  for _ in range(MAX_GENERATIONS):
-    print(f"Generation: {_ + 1}")
-    fitnesses = np.array([fitness(i, TEMPLATE) for i in population])
-    new_best = fitnesses[fitnesses.argmax()]
-    new_best_individual = population[fitnesses.argmax()]
+  for generation in range(MAX_GENERATIONS):
+    if generation % 100 == 0:
+      console.print(f"[green][🔁] Generation: {generation + 1}\n")
 
-    if new_best > best:
-      best = new_best
-      best_individual = new_best_individual
-      print(f"New best: {new_best} - {np.array(new_best_individual)}")
-      iters_with_same_best = 0
-    elif new_best == best:
-      iters_with_same_best += 1
+    fitnesses = np.array([fitness(i) for i in population])
+    new_highest_fitness = fitnesses[fitnesses.argmax()]
+    new_optimal_solution = population[fitnesses.argmax()]
 
-    if iters_with_same_best == STOPPING_CRITERIA:
-      print("Stopping because of no improvement")
+    if new_highest_fitness > highest_fitness:
+      highest_fitness = new_highest_fitness
+      optimal_solution = new_optimal_solution
+
+      console.print(f"[red][🔴] New highest fitness: {new_highest_fitness}", end="\n")
+      pprint(better_print(new_optimal_solution, values=5))
+
+      repeted_best = 0
+    elif repeted_best == STOP_CRITERIA:
+      console.print("[yellow][💀] The optimal solution hasn't been improved for a long time")
+      break
+    else:
+      repeted_best += 1
+
+    if highest_fitness == CROMOSOME_SIZE:
+      console.print("[green][🎉] Solution found!")
       break
 
-    best_selection = roulette_selection(population)
+    selected_candidates = roulette_selection(population)
     new_population = []
 
-    for i in range(0, len(best_selection), 2):
-      son1, son2 = crossover(best_selection[i], best_selection[i + 1])
-      mutation(son1)
-      mutation(son2)
+    while len(new_population) < POPULATION_SIZE:
+      i, y = np.random.choice(len(selected_candidates), 2, replace=False)
 
-      new_population.append(son1)
-      new_population.append(son2)
+      first_parent, second_parent = selected_candidates[i], selected_candidates[y]
+      first_child, second_child = crossover(first_parent, second_parent)
 
-    population = np.array(new_population)
+      mutation(first_child)
+      mutation(second_child)
 
-  print(f"\n\nBest: {best} - {np.array(best_individual)}")
+      first_child, second_child = replace(first_child, second_child, first_parent, second_parent)
 
-  best_str = "".join(str(i) for i in best_individual)
-  template_str = "".join(str(i) for i in TEMPLATE)
-  print(f"\n\nBest individual:\n{best_str}")
-  print(f"Template:\n{template_str}")
-  print("Strings are: ", "Not Equals" if best_str != template_str else "Equals")
+      new_population.append(first_child)
+      new_population.append(second_child)
+
+    population = np.stack(new_population)
+
+  console.print(f"\n\n[green][🎉] Best: {highest_fitness}", end="\n")
+  pprint(np.array(optimal_solution))
+
+  best_str = "".join(str(i) for i in optimal_solution)
+  console.print(f"\n\n[green][🎉] Best individual:", end="\n")
+  console.print(best_str)
 
 
 if __name__ == "__main__":
