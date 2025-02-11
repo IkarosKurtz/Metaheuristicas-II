@@ -25,6 +25,7 @@ CROMOSOME_SIZE = 500
 MAX_GENERATIONS = 2000
 STOP_CRITERIA = 200
 MUTATION_PROB = 1 / CROMOSOME_SIZE
+NUMBER_OF_SELECTED_SOLUTIONS = 100
 
 
 def generate_population() -> NDArray[Any]:
@@ -50,10 +51,10 @@ def roulette_selection(population: NDArray[Any]):
   probabilities = fitnesses / total_fitness
   slots = np.cumsum(probabilities)
 
-  random_numbers = np.random.rand(len(population))
+  random_numbers = np.random.rand(NUMBER_OF_SELECTED_SOLUTIONS)
   roulette_winners = population[np.searchsorted(slots, random_numbers)]
 
-  return np.array(roulette_winners)[:10]
+  return np.array(roulette_winners)
 
 
 def crossover(father1: NDArray[Any], father2: NDArray[Any]) -> tuple[NDArray[Any], NDArray[Any]]:
@@ -95,6 +96,7 @@ def main():
   repeted_best = 0
   console.print(f"[green][!] CROMOSOME_SIZE: {CROMOSOME_SIZE}")
   console.print(f"[green][!] MUTATION_PROB: {MUTATION_PROB * 100}%")
+  console.print(f"[green][!] NUMBER_OF_SELECTED_SOLUTIONS: {NUMBER_OF_SELECTED_SOLUTIONS}")
 
   for generation in range(MAX_GENERATIONS):
     if generation % 100 == 0:
