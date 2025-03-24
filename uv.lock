@@ -3,7 +3,7 @@ requires-python = ">=3.11"
 
 [manifest]
 members = [
-    "genetica-lgorithm",
+    "genetic-algorithm",
     "metaheuristicas-ii",
     "multiobjective-problem",
 ]
@@ -169,7 +169,7 @@ wheels = [
 ]
 
 [[package]]
-name = "genetica-lgorithm"
+name = "genetic-algorithm"
 version = "1.0.0"
 source = { editable = "Genetic_Algorithm" }
 

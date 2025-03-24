@@ -1,5 +1,5 @@
 [project]
-name = "genetica_lgorithm"
+name = "genetic_algorithm"
 version = "1.0.0"
 description = "Un programa que realiza una optimiazción en el problema onemax, usando un algoritmo genético"
 readme = "README.md"
