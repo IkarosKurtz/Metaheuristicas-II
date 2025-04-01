@@ -3,6 +3,10 @@ from pymoo.core.problem import Problem
 from pymoo.algorithms.moo.moead import MOEAD
 from pymoo.util.ref_dirs import get_reference_directions
 from pymoo.optimize import minimize
+from rich.console import Console
+from rich.table import Table
+
+console = Console()
 
 
 class EnergyDistributionProblem(Problem):
@@ -45,7 +49,7 @@ class EnergyDistributionProblem(Problem):
 problem = EnergyDistributionProblem()
 
 # Generamos direcciones de referencia para 4 objetivos. Aquí se usa el método "das-dennis" con n_partitions=5
-ref_dirs = get_reference_directions("das-dennis", 4, n_partitions=3)
+ref_dirs = get_reference_directions("das-dennis", 4, n_partitions=4)
 
 # Configuración del algoritmo MOEA/D
 algorithm = MOEAD(
@@ -59,15 +63,38 @@ res = minimize(
     problem,
     algorithm,
     ('n_gen', 200),
-    seed=1,
-    verbose=False
+    seed=12,
+    verbose=True
 )
 
 # Impresión de resultados: soluciones no dominadas obtenidas
-print("Soluciones no dominadas:")
+console.print("Soluciones no dominadas:")
 for i, sol in enumerate(res.F):
-  print(f"\nSolución {i+1}:")
-  print(f"  Pérdidas de energía: {sol[0]:.4f}")
-  print(f"  Utilización de renovables: {-sol[1]:.4f}")
-  print(f"  Costos operativos: {sol[2]:.4f}")
-  print(f"  Confiabilidad: {-sol[3]:.4f}")
+  console.print(f"\nSolución {i+1}:")
+  console.print(f"  Pérdidas de energía: {sol[0]:.4f}")
+  console.print(f"  Utilización de renovables: {-sol[1]:.4f}")
+  console.print(f"  Costos operativos: {sol[2]:.4f}")
+  console.print(f"  Confiabilidad: {-sol[3]:.4f}")
+
+# Creación de una tabla para mostrar los resultados
+table = Table(title="Soluciones")
+
+# Agregar columnas a la tabla
+table.add_column("Solución", justify="center", style="cyan", no_wrap=True)
+table.add_column("Pérdidas de Energía", justify="center", style="magenta")
+table.add_column("Utilización de Renovables", justify="center", style="green")
+table.add_column("Costos Operativos", justify="center", style="yellow")
+table.add_column("Confiabilidad", justify="center", style="blue")
+
+# Agregar filas con los resultados
+for i, sol in enumerate(res.F):
+  table.add_row(
+    f"{i+1}",
+    f"{sol[0]:.4f}",
+    f"{-sol[1]:.4f}",
+    f"{sol[2]:.4f}",
+    f"{-sol[3]:.4f}"
+  )
+
+# Mostrar la tabla en la consola
+console.print(table)
