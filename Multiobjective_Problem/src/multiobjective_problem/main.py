@@ -45,26 +45,23 @@ class EnergyDistributionProblem(Problem):
     out["F"] = np.column_stack([f1, f2, f3, f4])
 
 
-# Configuración del problema
 problem = EnergyDistributionProblem()
 
 # Generamos direcciones de referencia para 4 objetivos. Aquí se usa el método "das-dennis" con n_partitions=5
 ref_dirs = get_reference_directions("das-dennis", 4, n_partitions=4)
 
-# Configuración del algoritmo MOEA/D
 algorithm = MOEAD(
-    ref_dirs,
-    n_neighbors=15,
-    prob_neighbor_mating=0.7
+  ref_dirs,
+  n_neighbors=15,
+  prob_neighbor_mating=0.7
 )
 
-# Ejecución de la optimización
 res = minimize(
-    problem,
-    algorithm,
-    ('n_gen', 200),
-    seed=12,
-    verbose=True
+  problem,
+  algorithm,
+  ('n_gen', 200),
+  seed=12,
+  verbose=False
 )
 
 # Impresión de resultados: soluciones no dominadas obtenidas
@@ -77,7 +74,7 @@ for i, sol in enumerate(res.F):
   console.print(f"  Confiabilidad: {-sol[3]:.4f}")
 
 # Creación de una tabla para mostrar los resultados
-table = Table(title="Soluciones")
+table = Table(title="Soluciones No Dominadas", header_style="bold")
 
 # Agregar columnas a la tabla
 table.add_column("Solución", justify="center", style="cyan", no_wrap=True)
